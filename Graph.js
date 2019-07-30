@@ -1,4 +1,4 @@
-// Vertex is an ID and data (normally stored in a Node object or similar)
+// Vertex consists of an ID and data (normally stored in a Node object or similar)
 const createVertex = (id, properties) => ({ id: id, properties: properties });
 
 const duplicateKeys = reductionFunc => obj => Object.keys(obj).reduce(reductionFunc, {});
@@ -55,7 +55,7 @@ const getIds = graph => Object.keys(getVertices(graph));
 const addVertex = (graph, id, properties) => {
   const newAdjList = Object.assign({}, getAdjList(graph), {[id]: []});
   const newVertices = Object.assign({}, getVertices(graph), {[id]: properties});
-  
+
   return createGraph(newAdjList, newVertices);
 };
 
@@ -72,7 +72,7 @@ const addEdgeGeneric = directed => (graph, id1, id2) => {
 
   const tempAdjList = !adjList[id1].find(v => v === id2) ? addConnectionInAdjList(adjList, id1, id2) : adjList;
   const newAdjList = !directed && !tempAdjList[id2].find(v => v === id1) ? addConnectionInAdjList(tempAdjList, id2, id1) : tempAdjList;
-    
+
   return createGraph(newAdjList, vertices);
 };
 
@@ -87,32 +87,62 @@ const generateUuid = () => {
 };
 
 
-// Example usage
+// Example usages:
+
 // Node is simply a container for a potentially complex object being stored in each vertex
 const createNode = (name, capital, area) => ({ name: name, capital: capital, area: area });
 
-let g = createGraph();
-g = addVertex(g, "ACT", createNode("Australian Capital Territory", "Canberra",     2280));
-g = addVertex(g, "NSW", createNode("New South Wales",              "Sydney",     800628));
-g = addVertex(g, "NT",  createNode("Northern Territory",           "Darwin",    1335742));
-g = addVertex(g, "QLD", createNode("Queensland",                   "Brisbane",  1723936));
-g = addVertex(g, "SA",  createNode("South Australia",              "Adelaide",   978810));
-g = addVertex(g, "TAS", createNode("Tasmania",                     "Hobart",      64519));
-g = addVertex(g, "VIC", createNode("Victoria",                     "Melbourne",  227010));
-g = addVertex(g, "WA",  createNode("Western Australia",            "Perth",     2526786));
 
-g = addEdge(g, "ACT", "NSW");
-g = addEdge(g, "VIC", "NSW");
-g = addEdge(g, "VIC", "SA");
-g = addEdge(g, "NSW", "SA");
-g = addEdge(g, "QLD", "NSW");
-g = addEdge(g, "QLD", "SA");
-g = addEdge(g, "QLD", "NT");
-g = addEdge(g, "SA",  "NT");
-g = addEdge(g, "SA",  "WA");
-g = addEdge(g, "NT",  "WA");
+const vertices = {
+  'ACT': createNode('Australian Capital Territory', 'Canberra',     2280),
+  'NSW': createNode('New South Wales',              'Sydney',     800628),
+  'NT':  createNode('Northern Territory',           'Darwin',    1335742),
+  'QLD': createNode('Queensland',                   'Brisbane',  1723936),
+  'SA':  createNode('South Australia',              'Adelaide',   978810),
+  'TAS': createNode('Tasmania',                     'Hobart',      64519),
+  'VIC': createNode('Victoria',                     'Melbourne',  227010),
+  'WA':  createNode('Western Australia',            'Perth',     2526786)
+};
 
-console.log("g: ", g);
-console.log("IDs: ", getIds(g));
-console.log("AdjList: ", getAdjList(g));
+const adjList = {
+  'ACT': [ 'NSW' ],
+  'NSW': [ 'ACT', 'VIC', 'SA', 'QLD' ],
+  'NT':  [ 'QLD', 'SA',  'WA' ],
+  'QLD': [ 'NSW', 'SA',  'NT' ],
+  'SA':  [ 'VIC', 'NSW', 'QLD', 'NT', 'WA' ],
+  'TAS': [ ],
+  'VIC': [ 'NSW', 'SA' ],
+  'WA':  [ 'SA',  'NT' ],
+};
+
+const graph = createGraph(adjList, vertices);
+
+console.log('graph: ', graph);
+
+
+// An imperative approach to creating a graph
+let imperativeGraph = createGraph();
+imperativeGraph = addVertex(imperativeGraph, 'ACT', createNode('Australian Capital Territory', 'Canberra',     2280));
+imperativeGraph = addVertex(imperativeGraph, 'NSW', createNode('New South Wales',              'Sydney',     800628));
+imperativeGraph = addVertex(imperativeGraph, 'NT',  createNode('Northern Territory',           'Darwin',    1335742));
+imperativeGraph = addVertex(imperativeGraph, 'QLD', createNode('Queensland',                   'Brisbane',  1723936));
+imperativeGraph = addVertex(imperativeGraph, 'SA',  createNode('South Australia',              'Adelaide',   978810));
+imperativeGraph = addVertex(imperativeGraph, 'TAS', createNode('Tasmania',                     'Hobart',      64519));
+imperativeGraph = addVertex(imperativeGraph, 'VIC', createNode('Victoria',                     'Melbourne',  227010));
+imperativeGraph = addVertex(imperativeGraph, 'WA',  createNode('Western Australia',            'Perth',     2526786));
+
+imperativeGraph = addEdge(imperativeGraph, 'ACT', 'NSW');
+imperativeGraph = addEdge(imperativeGraph, 'VIC', 'NSW');
+imperativeGraph = addEdge(imperativeGraph, 'VIC', 'SA');
+imperativeGraph = addEdge(imperativeGraph, 'NSW', 'SA');
+imperativeGraph = addEdge(imperativeGraph, 'QLD', 'NSW');
+imperativeGraph = addEdge(imperativeGraph, 'QLD', 'SA');
+imperativeGraph = addEdge(imperativeGraph, 'QLD', 'NT');
+imperativeGraph = addEdge(imperativeGraph, 'SA',  'NT');
+imperativeGraph = addEdge(imperativeGraph, 'SA',  'WA');
+imperativeGraph = addEdge(imperativeGraph, 'NT',  'WA');
+
+console.log('imperative graph: ', imperativeGraph);
+console.log('\tIDs: ', getIds(imperativeGraph));
+console.log('\tAdjList: ', getAdjList(imperativeGraph));
 
