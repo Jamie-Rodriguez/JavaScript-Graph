@@ -1,14 +1,10 @@
 // Vertex consists of an ID and data (normally stored in a Node object or similar)
-const createVertex = (id, properties) => ({ id: id, properties: properties });
+const createVertex = (id, data) => ({ id: id, data: data });
+
 
 const duplicateKeys = reductionFunc => obj => Object.keys(obj).reduce(reductionFunc, {});
-const createAdjListFromVertices = duplicateKeys((acc, key) => ({ ...acc, [key]: [] }));
-const createVerticesFromAdjList = duplicateKeys((acc, key) => ({ ...acc, [key]: {} }));
-// At time of writing, spread properties is a Stage 4 proposal for ECMAScript 2018.
-// Workaround if not yet supported is below:
-// const createAdjListFromVertices = duplicateKeys((o, key) => Object.assign(o, { [key]: [] }));
-// const createVerticesFromAdjList = duplicateKeys((o, key) => Object.assign(o, { [key]: {} }));
-
+const createAdjListFromVertices = duplicateKeys((acc, vertex) => ({ ...acc, [vertex]: [] }));
+const createVerticesFromAdjList = duplicateKeys((acc, vertex) => ({ ...acc, [vertex]: {} }));
 
 // e.g. graph: 1 -> 2 <-> 3
 // {
@@ -52,16 +48,16 @@ const getVertices = graph => deepCopy(graph.vertices);
 // Should it be possible that a vertex exists in the vertices object, but not be present in the adjacency list object??
 const getIds = graph => Object.keys(getVertices(graph));
 
-const addVertex = (graph, id, properties) => {
-  const newAdjList = Object.assign({}, getAdjList(graph), {[id]: []});
-  const newVertices = Object.assign({}, getVertices(graph), {[id]: properties});
+const addVertex = (graph, id, data) => {
+  const newAdjList = { ...getAdjList(graph), [id]: [] };
+  const newVertices = { ...getVertices(graph), [id]: data };
 
   return createGraph(newAdjList, newVertices);
 };
 
 const vertexExists = (graph, id) => graph.adjList.hasOwnProperty(id) && graph.vertices.hasOwnProperty(id);
 
-const addConnectionInAdjList = (adjList, id1, id2) => Object.assign({}, adjList, { [id1]: adjList[id1].concat([id2]) });
+const addConnectionInAdjList = (adjList, id1, id2) => ({ ...adjList, id1: [...adjList[id1], id2] });
 
 const addEdgeGeneric = directed => (graph, id1, id2) => {
   if (!vertexExists(graph, id1) || !vertexExists(graph, id2))
@@ -112,7 +108,7 @@ const adjList = {
   'SA':  [ 'VIC', 'NSW', 'QLD', 'NT', 'WA' ],
   'TAS': [ ],
   'VIC': [ 'NSW', 'SA' ],
-  'WA':  [ 'SA',  'NT' ],
+  'WA':  [ 'SA',  'NT' ]
 };
 
 const graph = createGraph(adjList, vertices);
@@ -145,4 +141,3 @@ imperativeGraph = addEdge(imperativeGraph, 'NT',  'WA');
 console.log('imperative graph: ', imperativeGraph);
 console.log('\tIDs: ', getIds(imperativeGraph));
 console.log('\tAdjList: ', getAdjList(imperativeGraph));
-
