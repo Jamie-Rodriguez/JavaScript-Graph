@@ -9,9 +9,9 @@ const createVerticesFromAdjList = duplicateKeys((acc, vertex) => ({ ...acc, [ver
 // e.g. graph: 1 -> 2 <-> 3
 // {
 //   adjList: {
-//     id1: [ id2 ],
-//     id2: [ id3 ],
-//     id3: [ id2 ]
+//     id1: { id2 },
+//     id2: { id3 },
+//     id3: { id2 }
 //   },
 //   vertices: {
 //     id1: {...},
@@ -49,7 +49,7 @@ const getVertices = graph => deepCopy(graph.vertices);
 const getIds = graph => Object.keys(getVertices(graph));
 
 const addVertex = (graph, id, data) => {
-  const newAdjList = { ...getAdjList(graph), [id]: [] };
+  const newAdjList = { ...getAdjList(graph), [id]: {} };
   const newVertices = { ...getVertices(graph), [id]: data };
 
   return createGraph(newAdjList, newVertices);
@@ -57,17 +57,22 @@ const addVertex = (graph, id, data) => {
 
 const vertexExists = (graph, id) => graph.adjList.hasOwnProperty(id) && graph.vertices.hasOwnProperty(id);
 
-const addConnectionInAdjList = (adjList, id1, id2) => ({ ...adjList, id1: [...adjList[id1], id2] });
+// 'data' can be an object or a primitive
+const addConnectionInAdjList = (adjList, id1, id2, data={}) => ({ ...adjList, [id1]: {...adjList[id1], [id2]: data} });
 
-const addEdgeGeneric = directed => (graph, id1, id2) => {
+const addEdgeGeneric = directed => (graph, id1, id2, data) => {
   if (!vertexExists(graph, id1) || !vertexExists(graph, id2))
     return graph;
 
   const adjList = getAdjList(graph);
   const vertices = getVertices(graph);
 
-  const tempAdjList = !adjList[id1].find(v => v === id2) ? addConnectionInAdjList(adjList, id1, id2) : adjList;
-  const newAdjList = !directed && !tempAdjList[id2].find(v => v === id1) ? addConnectionInAdjList(tempAdjList, id2, id1) : tempAdjList;
+  const tempAdjList = !Object.keys(adjList[id1])
+                             .find(v => v === id2) ? addConnectionInAdjList(adjList, id1, id2, data)
+                                                   : adjList;
+  const newAdjList = !directed && !Object.keys(tempAdjList[id2])
+                                         .find(v => v === id1) ? addConnectionInAdjList(tempAdjList, id2, id1, data)
+                                                               : tempAdjList;
 
   return createGraph(newAdjList, vertices);
 };
@@ -85,9 +90,9 @@ const generateUuid = () => {
 
 // Example usages:
 
-// Node is simply a container for a potentially complex object being stored in each vertex
-const createNode = (name, capital, area) => ({ name: name, capital: capital, area: area });
 
+// ('node' is simply a container for a potentially complex object being stored in each vertex)
+const createNode = (name, capital, area) => ({ name: name, capital: capital, area: area });
 
 const vertices = {
   'ACT': createNode('Australian Capital Territory', 'Canberra',     2280),
@@ -101,14 +106,14 @@ const vertices = {
 };
 
 const adjList = {
-  'ACT': [ 'NSW' ],
-  'NSW': [ 'ACT', 'VIC', 'SA', 'QLD' ],
-  'NT':  [ 'QLD', 'SA',  'WA' ],
-  'QLD': [ 'NSW', 'SA',  'NT' ],
-  'SA':  [ 'VIC', 'NSW', 'QLD', 'NT', 'WA' ],
-  'TAS': [ ],
-  'VIC': [ 'NSW', 'SA' ],
-  'WA':  [ 'SA',  'NT' ]
+  'ACT': { 'NSW':  286 },
+  'NSW': { 'ACT':  286, 'VIC':  878,  'SA':  1375, 'QLD': 914 },
+  'NT':  { 'QLD': 3428, 'SA':  3032,  'WA':  4030 },
+  'QLD': { 'NSW':  914, 'SA':  2022,  'NT':  3428 },
+  'SA':  { 'VIC':  727, 'NSW': 1375,  'QLD': 2022, 'NT': 3032, 'WA': 2697 },
+  'TAS': { },
+  'VIC': { 'NSW':  878, 'SA':   727 },
+  'WA':  { 'SA':  2697, 'NT':  4030 }
 };
 
 const graph = createGraph(adjList, vertices);
@@ -126,18 +131,23 @@ imperativeGraph = addVertex(imperativeGraph, 'SA',  createNode('South Australia'
 imperativeGraph = addVertex(imperativeGraph, 'TAS', createNode('Tasmania',                     'Hobart',      64519));
 imperativeGraph = addVertex(imperativeGraph, 'VIC', createNode('Victoria',                     'Melbourne',  227010));
 imperativeGraph = addVertex(imperativeGraph, 'WA',  createNode('Western Australia',            'Perth',     2526786));
+// Passing in an object as data here - could just be a primitive number type as seen in previous example
+imperativeGraph = addEdge(imperativeGraph, 'ACT', 'NSW', {distance:  286});
+imperativeGraph = addEdge(imperativeGraph, 'VIC', 'NSW', {distance:  878});
+imperativeGraph = addEdge(imperativeGraph, 'VIC', 'SA',  {distance:  727});
+imperativeGraph = addEdge(imperativeGraph, 'NSW', 'SA',  {distance: 1375});
+imperativeGraph = addEdge(imperativeGraph, 'QLD', 'NSW', {distance:  914});
+imperativeGraph = addEdge(imperativeGraph, 'QLD', 'SA',  {distance: 2022});
+imperativeGraph = addEdge(imperativeGraph, 'QLD', 'NT',  {distance: 3428});
+imperativeGraph = addEdge(imperativeGraph, 'SA',  'NT',  {distance: 3032});
+imperativeGraph = addEdge(imperativeGraph, 'SA',  'WA',  {distance: 2697});
+imperativeGraph = addEdge(imperativeGraph, 'NT',  'WA',  {distance: 4030});
 
-imperativeGraph = addEdge(imperativeGraph, 'ACT', 'NSW');
-imperativeGraph = addEdge(imperativeGraph, 'VIC', 'NSW');
-imperativeGraph = addEdge(imperativeGraph, 'VIC', 'SA');
-imperativeGraph = addEdge(imperativeGraph, 'NSW', 'SA');
-imperativeGraph = addEdge(imperativeGraph, 'QLD', 'NSW');
-imperativeGraph = addEdge(imperativeGraph, 'QLD', 'SA');
-imperativeGraph = addEdge(imperativeGraph, 'QLD', 'NT');
-imperativeGraph = addEdge(imperativeGraph, 'SA',  'NT');
-imperativeGraph = addEdge(imperativeGraph, 'SA',  'WA');
-imperativeGraph = addEdge(imperativeGraph, 'NT',  'WA');
 
 console.log('imperative graph: ', imperativeGraph);
 console.log('\tIDs: ', getIds(imperativeGraph));
 console.log('\tAdjList: ', getAdjList(imperativeGraph));
+
+
+// In the case of an undirected graph, the adjacency list contains duplicate data
+// TODO - devise an efficient way to store this information
