@@ -80,6 +80,8 @@ const addEdgeGeneric = directed => (graph, id1, id2, data) => {
 const addEdge = addEdgeGeneric(false);
 const addDirectedEdge = addEdgeGeneric(true);
 
+const getAdjVertices = (graph, id) => Object.keys(graph.adjList[id]);
+
 // RFC4122 version 4 compliant solution
 // https://stackoverflow.com/a/2117523/9847165
 const generateUuid = () => {
@@ -151,3 +153,4 @@ console.log('\tAdjList: ', getAdjList(imperativeGraph));
 
 // In the case of an undirected graph, the adjacency list contains duplicate data
 // TODO - devise an efficient way to store this information
+// Still more efficient than an adjacency matrix for dense graphs though 
